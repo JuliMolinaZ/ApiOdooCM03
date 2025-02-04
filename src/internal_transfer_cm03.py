@@ -93,7 +93,7 @@ class InternalTransferProcessor(BaseProcessor):
                         producto_id,
                         cantidad,
                         0.0,  # Cantidad surtida
-                        ubicacion_id,
+                        None,
                         ubicacion_dest_id,
                         None,  # ProductoSupervisado
                         None   # Tarima

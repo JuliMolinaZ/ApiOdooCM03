@@ -72,9 +72,15 @@ class AlbaranesCM03Processor(BaseProcessor):
 
 
                 self.db.execute_proc('InsertOrUpdateAlbaranDetalle', (
-                    linea_id, albaran_id, linea_data['product_id'][0],
-                    linea_data['product_uom_qty'], 0.0,
-                    linea_data['location_id'][1], linea_data['location_dest_id'][1], None, None
+                    linea_id, 
+                    albaran_id, 
+                    linea_data['product_id'][0],
+                    linea_data['product_uom_qty'], 
+                    0.0,
+                    None, 
+                    linea_data['location_dest_id'][1], 
+                    None, 
+                    None
                 ))
 
             # Marcar albarán como procesado
