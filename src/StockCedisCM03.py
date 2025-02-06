@@ -7,7 +7,12 @@ import sys
 
 # SKU a probar
 sku_a_probar = "CM01PRBAGMPPREMNA"
-parent_location_id = 8
+
+# Diccionario de ubicaciones
+UBICACIONES = {
+    'QRA': 8,
+    'CDMX': 38
+}
 
 class StockCedisProcessor(BaseProcessor):
     def __init__(self):
@@ -78,7 +83,7 @@ class StockCedisProcessor(BaseProcessor):
                         WHERE ProductoSKUActual = %s
                     """
                     cursor.execute(query_update, (producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual))
-                    logging.info(f"Producto actualizado en la BD: SKU={sku_actual}, Stock={stock_total}")
+                    logging.info(f"Producto actualizado en la BD: SKU={sku_actual}, StockTotal={stock_total}, StockQro={stock_qra}, StockCDMX={stock_cdmx}")
                 else:
                     # Insertar un nuevo producto
                     logging.info(f"Intentando insertar ProductoID={producto_id}, ProductoNombre={producto_nombre}, SKU={sku_actual}")
@@ -88,7 +93,7 @@ class StockCedisProcessor(BaseProcessor):
                             VALUES (%s, %s, %s, %s, %s, %s)
                         """
                         cursor.execute(query_insert, (producto_id, producto_nombre, sku_actual, stock_total, stock_qra, stock_cdmx))
-                        logging.info(f"Producto insertado en la BD: ProductoID={producto_id}, SKU={sku_actual}, Stock={stock_total}")
+                        logging.info(f"Producto insertado en la BD: ProductoID={producto_id}, SKU={sku_actual}, StockTotal={stock_total}, StockQro={stock_qra}, StockCDMX={stock_cdmx}")
                     else:
                         logging.warning(f"No se insertó el producto con SKU={sku_actual} porque ProductoID es inválido o None")
 
@@ -103,13 +108,19 @@ class StockCedisProcessor(BaseProcessor):
         producto = self.obtener_producto_por_sku(sku_a_probar)
         product_id = producto.get('id')
 
-        location_ids = self.obtener_sububicaciones(parent_location_id)
-        stock_detallado = self.obtener_stock_por_sububicacion(product_id, location_ids)
+        # Obtener sububicaciones de QRA
+        location_ids_qra = self.obtener_sububicaciones(UBICACIONES['QRA'])
+        stock_qra_detallado = self.obtener_stock_por_sububicacion(product_id, location_ids_qra)
+        stock_qra = stock_qra_detallado.get(UBICACIONES['QRA'], 0)
 
-        stock_total = sum(stock_detallado.values())
-        stock_qra = stock_detallado.get(parent_location_id, 0)
-        stock_cdmx = 0  # Ajusta si tienes lógica para calcular este valor
+        #Obtener sububicaciones de CDMX
+        stock_cdmx_location_ids = self.obtener_sububicaciones(UBICACIONES['CDMX'])
+        stock_cdmx_detallado = self.obtener_stock_por_sububicacion(product_id, stock_cdmx_location_ids)
+        stock_cdmx = sum(stock_cdmx_detallado.values())
 
+        # Stock total
+        stock_total = stock_qra + stock_cdmx
+        
         self.registrar_stock_en_bd(
             producto_id=product_id,
             producto_nombre=producto['name'],
