@@ -126,13 +126,6 @@ class RecibosCM03Processor(BaseProcessor):
                 logging.error(f"Error en ciclo principal: {e}")
                 time.sleep(30)  # Espera más tiempo en caso de error
 
-    def close_connections(self):
-        """Cierra conexiones de base de datos y Odoo"""
-        if hasattr(self.db, 'close'):
-            self.db_operations.close()  # Cerramos la conexión si tiene el método 'close'
-        else:
-            logging.warning("No se pudo cerrar la conexión, 'close' no está disponible.")
-        logging.info("Conexión a la base de datos cerrada.")
 
 if __name__ == "__main__":
     logger = configurar_logger(level=logging.INFO, log_to_file=False)

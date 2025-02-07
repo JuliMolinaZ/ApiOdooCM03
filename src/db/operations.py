@@ -51,11 +51,11 @@ class DatabaseOperations:
         try:
             logging.info(f"Parámetros para InsertOrUpdateAlbaranTest: {(
                 albaran_id, fecha_creacion, cliente, albaran_folio,
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'Pendiente', 'NULL', 'NULL', 0.0, '2024-01-01', 'NULL'
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'Pendiente', None, None, 0.0, '2024-01-01', None
             )}")
             self.execute('InsertOrUpdateAlbaranTest', (
                 albaran_id, fecha_creacion, cliente, albaran_folio,
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'Pendiente', 'NULL', 'NULL', 0.0, '2024-01-01', 'NULL'
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'Pendiente', None, None, 0.0, '2024-01-01', None
             ), proc=True)
             logging.info(f"Albarán {albaran_folio} insertado o actualizado en la base de datos.")
         except Exception as e:
@@ -66,7 +66,7 @@ class DatabaseOperations:
         try:
             self.execute('InsertOrUpdateAlbaranDetalle', (
                 linea_id, albaran_id, product_id, quantity, 0.0,
-                'NULL', location_dest, 'NULL', 'NULL'
+                None, location_dest, None, None
             ), proc=True)
             logging.info(f"Insertando/Actualizando detalle del albarán {albaran_id} con parámetros: {linea_id}, {product_id}, Cantidad={quantity}, Destino={location_dest}")
             logging.info(f"Detalle del albarán {albaran_id} insertado correctamente.")
@@ -115,7 +115,7 @@ class DatabaseOperations:
         """Inserta o Actualiza detalles del recibo en la base de datos"""
         try:
             self.execute('InsertOrUpdateReciboDetalle', (
-                linea_id, recibo_id, product_id, cantidad, 'NULL'
+                linea_id, recibo_id, product_id, cantidad, None
             ), proc=True)
         except Exception as e:
             logging.error(f"Error insertando detalle del recibo {recibo_id}: {e}")

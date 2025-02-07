@@ -19,7 +19,7 @@ class AlbaranesCM03Processor(BaseProcessor):
         super().__init__()
         self.odoo_operations = OdooOperations(self.odoo)
         self.db_operations = DatabaseOperations()
-        self.albaranes_especificos = ['WH/TCDMX/00001']
+        self.albaranes_especificos = ['']
         self.picking_type_internal_id = self.odoo_operations.obtener_tipo_operacion_interna()
         logging.info("Inicializado AlbaranesCM03Processor")
 

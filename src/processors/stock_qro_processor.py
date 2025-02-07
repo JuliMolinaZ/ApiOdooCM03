@@ -19,16 +19,6 @@ UBICACIONES = {
     'CDMX': 38  # ID de la ubicación WH/Stock CDMX
 }
 
-# Configuración del log
-logging.basicConfig(
-    level=logging.DEBUG,  # Cambiado a DEBUG para mayor detalle
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler("sync_log.log")
-    ], force=True
-)
-
 class StockQroCM03(BaseProcessor):
     def __init__(self):
         super().__init__()
