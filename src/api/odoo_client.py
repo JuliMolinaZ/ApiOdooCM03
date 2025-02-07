@@ -1,7 +1,8 @@
-# src/odoo_client.py
+# src/api/client.py
+# Conexion a Odoo, consultas o acciones relacionadas.
 
 import xmlrpc.client
-from config import Config
+from config.settings import Config
 import logging
 
 class OdooClient:
@@ -34,4 +35,12 @@ class OdooClient:
         except Exception as e:
             logging.error(f"Error al ejecutar {method} en {model}: {e}")
             return None
+        
+    def search(self, model, domain):
+        return self.execute_kw(model, 'search', [domain])
+    
+    def read(self, model, ids, fields):
+        """ Lee registros de un modelo en Odoo. """
+        return self.models.execute_kw(self.db, self.uid, self.password,
+                                    model, 'read', [ids], {'fields': fields})
 

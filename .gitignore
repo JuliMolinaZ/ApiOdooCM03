@@ -1,0 +1,19 @@
+# Archivos y carpetas específicas del entorno virtual
+.venv/
+env/
+
+# Cachés y archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configuracion de entorno
+.env
+
+# Tests
+.pytest_cache/
+
+# Logs
+logs/
+*.log

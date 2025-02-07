@@ -1,16 +1,22 @@
-# src/StockQroCM03.py
-# Actualiza todos los productos existentes en la bd 
+# src/processors/stock_qra_processor.py
+# Actualiza todos los productos existentes en la BD, considerando el stock de QRA y CDMX usando un diccionario de ubicaciones
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
 
 import time
-import logging
 import msvcrt
-import sys
-from base_processor import BaseProcessor
+import logging
+from utils.logger import configurar_logger
+from processors.base_processor import BaseProcessor
+from api.odoo_operations import OdooOperations
+from db.operations import DatabaseOperations
 
 LOCK_FILE_PATH = 'sync_script.lock'
 UBICACIONES = {
-    'QRA': 8,
-    'CDMX': 38
+    'QRA': 8,  # ID de la ubicación WH/Stock QRA
+    'CDMX': 38  # ID de la ubicación WH/Stock CDMX
 }
 
 # Configuración del log
@@ -27,47 +33,26 @@ class StockQroCM03(BaseProcessor):
     def __init__(self):
         super().__init__()
         logging.debug("Inicializado StockQroCM03")
+        self.odoo_operations = OdooOperations(self.odoo)
+        self.db_operations = DatabaseOperations()
+
 
     def obtener_productos_en_sububicaciones(self, location_id, offset=0, limit=100):
-        """Obtiene productos en sububicaciones de WH/Stock desde Odoo."""
-        try:
-            logging.debug("Obteniendo productos en sububicaciones (Offset: %d, Limit: %d)", offset, limit)
-            productos = self.odoo.execute_kw(
-                'stock.quant', 'search_read',
-                [[('location_id', 'child_of', location_id)]],
-                {'fields': ['product_id', 'quantity', 'location_id'], 'offset': offset, 'limit': limit}
-            )
-            logging.debug("Productos obtenidos: %s", productos)
-            return productos
-        except Exception as e:
-            logging.error("Error al obtener productos de Odoo: %s", e)
-            return []
+        """Obtiene productos en sububicaciones de una ubicación dada desde Odoo."""
+        productos = self.odoo_operations.sububicaciones_produc_total(location_id, offset, limit)
+        logging.debug("Productos obtenidos en Odoo para ubicación %s: %s", location_id, productos)
+        return productos
 
     def obtener_nombres_productos(self, product_ids):
         """Obtiene los nombres de los productos en Odoo."""
-        try:
-            logging.debug("Obteniendo nombres de productos para IDs: %s", product_ids)
-            product_data = self.odoo.execute_kw(
-                'product.product', 'search_read',
-                [[('id', 'in', product_ids)]],
-                {'fields': ['id', 'name']}
-            )
-            logging.debug("Nombres obtenidos: %s", product_data)
-            return {prod['id']: prod['name'] for prod in product_data}
-        except Exception as e:
-            logging.error("Error al obtener nombres de productos: %s", e)
-            return {}
+        return self.odoo_operations.obtener_produc_total(product_ids)
 
     def obtener_productos_existentes(self):
         """Obtiene los productos existentes en MySQL."""
-        query = "SELECT ProductoID, ProductoSKUActual, ProductoNombre, StockQra FROM Productos"
-        logging.debug("Ejecutando consulta en MySQL: %s", query)
-        rows = self.db.execute_query(query)
-        logging.debug("Productos existentes obtenidos: %s", rows)
-        return {row['ProductoID']: row for row in rows} if rows else {}
+        return self.db_operations.obtener_produc_existentes()
 
     def actualizar_productos(self):
-        """Sincroniza los productos entre Odoo y MySQL."""
+        """Sincroniza los productos entre Odoo y MySQL, considerando el stock de varias ubicaciones."""
         existing_products = self.obtener_productos_existentes()
         if not existing_products:
             logging.warning("No se encontraron productos en MySQL")
@@ -77,11 +62,11 @@ class StockQroCM03(BaseProcessor):
         limit = 100
         product_quantities = {location: {} for location in UBICACIONES}
 
-        # Obtener Stock de todas las ubicaciones definidas en diccionario
+        # Obtener stock de todas las ubicaciones definidas en el diccionario
         for location_name, location_id in UBICACIONES.items():
             logging.info("Obteniendo productos para la ubicación: %s (ID: %d)", location_name, location_id)
             while True:
-                products = self.obtener_productos_en_sububicaciones(offset, limit)
+                products = self.obtener_productos_en_sububicaciones(location_id, offset, limit)
                 if not products:
                     break
 
@@ -89,12 +74,12 @@ class StockQroCM03(BaseProcessor):
                     ProductoID = product['product_id'][0]
                     product_quantities[location_name][ProductoID] = product_quantities[location_name].get(ProductoID, 0) + product['quantity']
                     logging.debug("%s ProductoID %d: Cantidad acumulada = %s", location_name, ProductoID, product_quantities[location_name][ProductoID])
-                
-                offset += limit
-            
-            offset = 0 # Resetear el offset para la siguiente ubicación
 
-        # Unir IDs de productos obtenidos
+                offset += limit
+
+            offset = 0  # Resetear el offset para la siguiente ubicación
+
+        # Unir todos los IDs de productos obtenidos
         all_product_ids = set().union(*[quantities.keys() for quantities in product_quantities.values()])
         product_names = self.obtener_nombres_productos(list(all_product_ids))
         total_actualizados = 0
@@ -112,18 +97,18 @@ class StockQroCM03(BaseProcessor):
 
             # Actualizar nombre si es necesario
             if ProductoNombreOdoo != nombre_mysql:
-                self.db.execute_query("UPDATE Productos SET ProductoNombre = %s WHERE ProductoID = %s", (ProductoNombreOdoo, ProductoID))
+                self.db_operations.actualizar_produc_nombre(ProductoNombreOdoo, ProductoID)
                 logging.info("Nombre actualizado para ProductoID %d (SKU %s): '%s' -> '%s'", ProductoID, ProductoSKU, nombre_mysql, ProductoNombreOdoo)
                 total_actualizados += 1
 
-            # Actualizar stock de cada ubicacion si es necesario
+            # Actualizar stock de cada ubicación si es necesario
             for location_name, stock_dict in product_quantities.items():
                 stock_mysql = stock_mysql_qra if location_name == 'QRA' else stock_mysql_cdmx
                 stock_new = stock_dict.get(ProductoID, 0)
 
                 if stock_mysql != stock_new:
-                    self.db.execute_query(f"UPDATE Productos SET Stock{location_name} = %s WHERE ProductoID = %s", (stock_new, ProductoID))
-                    logging.info("Stock actualizado para ProductoID %d (SKU %s): %s -> %s", ProductoID, ProductoSKU, location_name, stock_mysql, stock_new)
+                    self.db_operations.actualizar_produc_stock(location_name, stock_new, ProductoID)
+                    logging.info("Stock actualizado para ProductoID %d (SKU %s) en %s: %s -> %s", ProductoID, ProductoSKU, location_name, stock_mysql, stock_new)
                     total_actualizados += 1
 
         self.db.commit()
@@ -144,6 +129,7 @@ class StockQroCM03(BaseProcessor):
             logging.info("Lock liberado. Sincronización finalizada.")
 
 if __name__ == "__main__":
+    logger = configurar_logger(level=logging.DEBUG, log_to_file=True, log_file="sync_qro_log.log")
     processor = StockQroCM03()
     try:
         while True:
@@ -155,3 +141,4 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(f"Error inesperado: {e}")
         processor.close_connections()
+

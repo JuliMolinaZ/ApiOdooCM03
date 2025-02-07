@@ -1,21 +1,14 @@
-# src/database.py
+# src/db/connection.py
+# Establece la conexion con la bae de datos.
 
 import mysql.connector
 from mysql.connector import Error
-from config import Config
+from config.settings import Config
 import logging
-import pymysql
-import os
 
-# Configurar logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s'
-)
-
-class Database:
+class DatabaseConnection:
     def __init__(self):
-        logging.debug("Inicializando la clase Database.")
+        logging.debug("Inicializando la clase DatabaseConnection.")
         self.host = Config.MYSQL_HOST
         self.port = Config.MYSQL_PORT
         self.user = Config.MYSQL_USER
@@ -24,6 +17,7 @@ class Database:
         self.connection = None
 
     def connect(self):
+        """Establece la conexion con la base de datos"""
         try:
             self.connection = mysql.connector.connect(
                 host=self.host,
@@ -33,28 +27,16 @@ class Database:
                 database=self.database
             )
             if self.connection.is_connected():
-                logging.info("Conexión a la base de datos MySQL exitosa")
+                logging.info("Conexion a la base de datos MySQL existosa.")
         except Error as e:
-            logging.error(f"Error al conectar a la base de datos: {e}")
-            self.connection = None
+                logging.error(f"Error al conectar a la base de datos: {e}")
+                self.connection = None
 
     def disconnect(self):
+        """Cierra la conexion con la base de datos"""
         if self.connection and self.connection.is_connected():
             self.connection.close()
-            logging.info("Conexión a la base de datos MySQL cerrada")
-
-    def check_and_reconnect(self):
-        """Verifica si la conexión está activa y la restablece si es necesario."""
-        try:
-            if self.connection is None or not self.connection.is_connected():
-                logging.info("Reconectando a la base de datos...")
-                self.connect()  # Intentar reconectar
-            else:
-                self.connection.ping(reconnect=True)  # Intentar hacer un ping a la base de datos
-        except Error as e:
-            logging.error(f"Error al verificar o reconectar la base de datos: {e}")
-            self.disconnect()  # Si ocurre un error, cerramos la conexión y tratamos de reconectar
-            self.connect()
+            logging.info("Conexion a la base de datos MySQL cerrada.")
 
     def execute_query(self, query, params=None):
         cursor = self.connection.cursor(dictionary=True)
