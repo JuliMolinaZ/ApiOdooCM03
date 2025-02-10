@@ -17,4 +17,4 @@ __pycache__/
 # Logs
 logs/
 *.log
-*.lock
+src/processors/sync_script.lock
