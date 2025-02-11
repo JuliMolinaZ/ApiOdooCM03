@@ -12,7 +12,7 @@ from api.odoo_operations import OdooOperations
 from db.operations import DatabaseOperations
 
 # SKU a probar
-sku_a_probar = "CAAMGCI036011OPK"
+sku_a_probar = "CEIDT20060CM2CNA"
 
 # Diccionario de ubicaciones
 UBICACIONES = {
@@ -54,7 +54,7 @@ class StockCedisProcessor(BaseProcessor):
 
     def registrar_stock_en_bd(self, producto_id, producto_nombre, sku_actual, stock_total, stock_qra, stock_cdmx):
         if self.db_operations.sku_en_bd(sku_actual):
-            self.db_operations.actualizar_producto(producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual)
+            self.db_operations.actualizar_producto(producto_id, producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual)
         else:
             if producto_id is not None and isinstance(producto_id, int):
                 self.db_operations.insertar_producto(producto_id, producto_nombre, sku_actual, stock_total, stock_qra, stock_cdmx)

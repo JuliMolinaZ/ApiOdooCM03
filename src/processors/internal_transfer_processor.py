@@ -16,7 +16,7 @@ from db.operations import DatabaseOperations
 class InternalTransferProcessor(BaseProcessor):
     def __init__(self):
         super().__init__()
-        self.albaranes_especificos = ['WH/TCDMX/00002', 'WH/OUT/16012', 'WH/OUT/16010']
+        self.albaranes_especificos = ['WH/TCDMX/00002']
         logging.info(f"InternalTransferProcessor inicializado con albaranes especificos: {self.albaranes_especificos}")
 
         # Inicializando las operaciones Odoo y BD
@@ -40,8 +40,9 @@ class InternalTransferProcessor(BaseProcessor):
             if albaran_data['name'].startswith('CDMX/'):
                 logging.info(f"Omitiendo albaran con folio {albaran_folio}")
                 return
-            
-            cliente = albaran_data['partner_id'][1]
+            # Solucion [ERROR] Error al procesar albaran 28531: 'bool' object is not subscriptable
+            cliente = albaran_data['partner_id'][1] if albaran_data['partner_id'] else 'Cliente no definido'
+
             fecha_creacion = albaran_data['create_date']
             albaran_status = 'Pendiente'
             lineas = albaran_data['move_ids']
@@ -91,8 +92,9 @@ class InternalTransferProcessor(BaseProcessor):
         # Ciclo principal para procesar albaranes según las condiciones especificadas
         while True:
             try:
-                logging.info("Buscando albaranes con prioridad 1, estado 'assigned' y folio que comienza con 'wh/tcdmx'.")
-                albaranes = self.odoo_operations.search_albaranes_cdex(priority=1, state='assigned', folio_like=['WH/TCDMX%', 'WH/RTCDMX%'])
+                # Se busca albaranes con priority y con done
+                logging.info("Buscando albaranes con prioridad 1, estado 'done' y folio que comienza con 'wh/tcdmx'.")
+                albaranes = self.odoo_operations.search_albaranes_cdex(priority=1, state='done', folio_like=['WH/TCDMX%', 'WH/RTCDMX%'])
 
                 # Procesar los albaranes desde el más reciente hacia atrás
                 for albaran in albaranes[::-1]:

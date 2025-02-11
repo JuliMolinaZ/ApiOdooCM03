@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 
 # Cargar variables de entorno desde el archivo .env ubicado en el directorio raíz del proyecto
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
 class Config:
