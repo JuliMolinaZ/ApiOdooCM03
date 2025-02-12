@@ -52,7 +52,7 @@ class OdooOperations:
             return None
     
     def buscar_albaranes_pendientes(self):
-        domain = [("state", "=", "assigned"), ('name', 'like', 'WH/OUT/%')]  # Filtra albaranes listos para procesar
+        domain = [("state", "=", "done"), ('name', 'like', 'WH/OUT/%')]  # Filtra albaranes listos para procesar
         albaranes = self.odoo.search("stock.picking", domain)
         return albaranes if albaranes else []
     
@@ -71,7 +71,7 @@ class OdooOperations:
         
 # Para internal_transfer_processor.py
     def search_albaranes_cdex(self, priority=None, state=None, folio_like=None):
-        """Busca albaranes con prioridad 1, estado 'assigned' y folio que comienza con 'WH/TCDMX y WH/RTCDMX'."""
+        """Busca albaranes con prioridad 1, estado 'done' y folio que comienza con 'WH/TCDMX y WH/RTCDMX'."""
         try:
             # Definir el dominio para la búsqueda
             domain = []

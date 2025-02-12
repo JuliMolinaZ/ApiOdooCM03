@@ -131,15 +131,15 @@ class DatabaseOperations:
             return False
 
   
-    def actualizar_producto(self, producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual):
+    def actualizar_producto(self, producto_id, producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual):
         """Actualiza la información del producto en la base de datos."""
         try:
             query_update = """
                 UPDATE Productos
-                SET ProductoNombre = %s, ProductoStock = %s, StockQra = %s, StockCDMX = %s
+                SET ProductoID = %s, ProductoNombre = %s, ProductoStock = %s, StockQra = %s, StockCDMX = %s
                 WHERE ProductoSKUActual = %s
             """
-            self.execute(query_update, (producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual))
+            self.execute(query_update, (producto_id, producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual))
             self.db_connection.connection.commit()
             logging.info(f"Producto actualizado en la BD: SKU={sku_actual}, StockTotal={stock_total}, StockQra={stock_qra}, StockCDMX={stock_cdmx}")
         except Exception as e:
