@@ -12,7 +12,7 @@ from api.odoo_operations import OdooOperations
 from db.operations import DatabaseOperations
 
 # SKU a probar
-sku_a_probar = [' ', ' ', ' ']
+sku_a_probar = ['1874-00']
 
 # Diccionario de ubicaciones
 UBICACIONES = {
@@ -83,7 +83,7 @@ class StockCedisProcessor(BaseProcessor):
                 self.registrar_stock_en_bd(
                     producto_id=product_id,
                     producto_nombre=producto['name'],
-                    sku_actual=sku_a_probar,
+                    sku_actual=sku,
                     stock_total=stock_total,
                     stock_qra=stock_qra,
                     stock_cdmx=stock_cdmx
