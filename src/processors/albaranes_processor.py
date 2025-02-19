@@ -19,7 +19,7 @@ class AlbaranesCM03Processor(BaseProcessor):
         super().__init__()
         self.odoo_operations = OdooOperations(self.odoo)
         self.db_operations = DatabaseOperations()
-        self.albaranes_especificos = ['']
+        self.albaranes_especificos = ['WH/OUT/21381']
         self.picking_type_internal_id = self.odoo_operations.obtener_tipo_operacion_interna()
         logging.info("Inicializado AlbaranesCM03Processor")
 
@@ -32,6 +32,7 @@ class AlbaranesCM03Processor(BaseProcessor):
 
             # Lee detalles de albaran actual
             albaran_data = self.odoo_operations.obtener_albaran_data(albaran_id)
+            logging.info(f"Data del albaran a procesado {albaran_data}")
             if not albaran_data:
                 logging.warning(f"Albaran {albaran_id} no encontrado.")
                 return

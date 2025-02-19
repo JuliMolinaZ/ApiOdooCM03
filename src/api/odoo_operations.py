@@ -52,7 +52,7 @@ class OdooOperations:
             return None
     
     def buscar_albaranes_pendientes(self):
-        domain = [("state", "=", "done"), ('name', 'like', 'WH/OUT/%')]  # Filtra albaranes listos para procesar
+        domain = [("state", "=", "assigned"), ('name', 'like', 'WH/OUT/%')]  # Filtra albaranes listos para procesar
         albaranes = self.odoo.search("stock.picking", domain)
         return albaranes if albaranes else []
     

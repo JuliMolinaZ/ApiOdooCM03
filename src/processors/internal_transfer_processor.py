@@ -16,7 +16,7 @@ from db.operations import DatabaseOperations
 class InternalTransferProcessor(BaseProcessor):
     def __init__(self):
         super().__init__()
-        self.albaranes_especificos = ['WH/TCDMX/00002']
+        self.albaranes_especificos = ['']
         logging.info(f"InternalTransferProcessor inicializado con albaranes especificos: {self.albaranes_especificos}")
 
         # Inicializando las operaciones Odoo y BD
@@ -94,7 +94,7 @@ class InternalTransferProcessor(BaseProcessor):
             try:
                 # Se busca albaranes con priority y con done
                 logging.info("Buscando albaranes con prioridad 1, estado 'done' y folio que comienza con 'wh/tcdmx'.")
-                albaranes = self.odoo_operations.search_albaranes_cdex(priority=1, state='done', folio_like=['WH/TCDMX%', 'WH/RTCDMX%'])
+                albaranes = self.odoo_operations.search_albaranes_cdex(priority=1, folio_like=['WH/TCDMX%'])
 
                 # Procesar los albaranes desde el más reciente hacia atrás
                 for albaran in albaranes[::-1]:

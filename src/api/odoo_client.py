@@ -1,4 +1,4 @@
-# src/api/client.py
+# src/api/odoo_client.py
 # Conexion a Odoo, consultas o acciones relacionadas.
 
 import xmlrpc.client

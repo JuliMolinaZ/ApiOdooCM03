@@ -77,6 +77,7 @@ class DatabaseOperations:
         """Marca el albarán como procesado en la base de datos."""
         try:
             self.execute("UPDATE Albaran SET Procesado = 1 WHERE AlbaranID = %s", (albaran_id,))
+            self.db_connection.connection.commit()
             logging.info(f"Albarán {albaran_id} marcado como procesado.")
         except Exception as e:
             logging.error(f"Error al marcar el albarán {albaran_id} como procesado: {e}")
@@ -129,7 +130,6 @@ class DatabaseOperations:
         except Exception as e:
             logging.error(f"Error al verificar existencia de producto: {e}")
             return False
-
   
     def actualizar_producto(self, producto_id, producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual):
         """Actualiza la información del producto en la base de datos."""
