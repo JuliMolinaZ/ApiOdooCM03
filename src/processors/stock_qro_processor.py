@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 import time
 import msvcrt
 import logging
+from decimal import Decimal, ROUND_HALF_UP
 from utils.logger import configurar_logger
 from processors.base_processor import BaseProcessor
 from api.odoo_operations import OdooOperations
@@ -42,7 +43,6 @@ class StockQroCM03(BaseProcessor):
         return self.db_operations.obtener_produc_existentes()
 
     def actualizar_productos(self):
-        """Sincroniza los productos entre Odoo y MySQL, considerando el stock de varias ubicaciones."""
         existing_products = self.obtener_productos_existentes()
         if not existing_products:
             logging.warning("No se encontraron productos en MySQL")
@@ -51,8 +51,8 @@ class StockQroCM03(BaseProcessor):
         offset = 0
         limit = 100
         product_quantities = {location: {} for location in UBICACIONES}
+        product_sku_mapping = {}
 
-        # Obtener stock de todas las ubicaciones definidas en el diccionario
         for location_name, location_id in UBICACIONES.items():
             logging.info("Obteniendo productos para la ubicación: %s (ID: %d)", location_name, location_id)
             while True:
@@ -62,47 +62,65 @@ class StockQroCM03(BaseProcessor):
 
                 for product in products:
                     ProductoID = product['product_id'][0]
+                    ProductoSKU = product['product_id'][1]
                     product_quantities[location_name][ProductoID] = product_quantities[location_name].get(ProductoID, 0) + product['quantity']
+                    product_sku_mapping[ProductoID] = ProductoSKU
                     logging.debug("%s ProductoID %d: Cantidad acumulada = %s", location_name, ProductoID, product_quantities[location_name][ProductoID])
 
                 offset += limit
+            offset = 0  
 
-            offset = 0  # Resetear el offset para la siguiente ubicación
-
-        # Unir todos los IDs de productos obtenidos
         all_product_ids = set().union(*[quantities.keys() for quantities in product_quantities.values()])
-        product_names = self.obtener_nombres_productos(list(all_product_ids))
+        product_names, product_skus = self.obtener_nombres_productos(list(all_product_ids))
         total_actualizados = 0
+        total_insertados = 0
+
+        # diccionario vacío para almacenar el ProductoID más grande de cada SKU
+        sku_max_id = {}
+        for ProductoID in all_product_ids:
+            ProductoSKUOdoo = product_skus.get(ProductoID, "")
+            if ProductoSKUOdoo:
+                if ProductoSKUOdoo not in sku_max_id or ProductoID > sku_max_id[ProductoSKUOdoo]: #almacena si es el primer id o si es mayor se reemplaza
+                    sku_max_id[ProductoSKUOdoo] = ProductoID
 
         for ProductoID in all_product_ids:
+            ProductoNombreOdoo = product_names.get(ProductoID, "")
+            ProductoSKUOdoo = product_skus.get(ProductoID, "")
+            
             if ProductoID not in existing_products:
-                logging.warning("ProductoID %d no encontrado en MySQL. Saltando actualización.", ProductoID)
+                if ProductoID == sku_max_id.get(ProductoSKUOdoo):
+                    self.db_operations.insertar_produc_ubicaciones(ProductoID, ProductoNombreOdoo, ProductoSKUOdoo)
+                    logging.warning("--- ProductoID %d INSERTADO CON SKU %s", ProductoID, ProductoSKUOdoo)
+                    total_insertados += 1
                 continue
 
-            ProductoNombreOdoo = product_names.get(ProductoID, existing_products[ProductoID]['ProductoNombre'])
-            ProductoSKU = existing_products[ProductoID]['ProductoSKUActual']
+            sku_mysql = existing_products[ProductoID]['ProductoSKUActual']
             nombre_mysql = existing_products[ProductoID]['ProductoNombre']
             stock_mysql_qra = existing_products[ProductoID]['StockQra']
             stock_mysql_cdmx = existing_products[ProductoID]['StockCDMX']
 
-            # Actualizar nombre si es necesario
-            if ProductoNombreOdoo != nombre_mysql:
+            if ProductoNombreOdoo and ProductoNombreOdoo != nombre_mysql:
                 self.db_operations.actualizar_produc_nombre(ProductoNombreOdoo, ProductoID)
-                logging.info("Nombre actualizado para ProductoID %d (SKU %s): '%s' -> '%s'", ProductoID, ProductoSKU, nombre_mysql, ProductoNombreOdoo)
+                logging.info("Nombre actualizado para ProductoID %d (SKU %s): '%s' -> '%s'", ProductoID, sku_mysql, nombre_mysql, ProductoNombreOdoo)
+                total_actualizados += 1
+            if ProductoSKUOdoo and ProductoSKUOdoo != sku_mysql:
+                self.db_operations.actualizar_produc_sku(ProductoSKUOdoo, ProductoID)
+                logging.info("SKU actualizado para ProductoID %d: '%s' -> '%s'", ProductoID, nombre_mysql, ProductoSKUOdoo)
                 total_actualizados += 1
 
-            # Actualizar stock de cada ubicación si es necesario
             for location_name, stock_dict in product_quantities.items():
                 stock_mysql = stock_mysql_qra if location_name == 'QRA' else stock_mysql_cdmx
                 stock_new = stock_dict.get(ProductoID, 0)
-
+                stock_mysql = Decimal(stock_mysql).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if stock_mysql is not None else Decimal(0)
+                stock_new = Decimal(stock_new).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if stock_new is not None else Decimal(0)
                 if stock_mysql != stock_new:
                     self.db_operations.actualizar_produc_stock(location_name, stock_new, ProductoID)
-                    logging.info("Stock actualizado para ProductoID %d (SKU %s) en %s: %s -> %s", ProductoID, ProductoSKU, location_name, stock_mysql, stock_new)
+                    logging.info("Stock actualizado para ProductoID %d (SKU %s) en %s: %s -> %s", ProductoID, sku_mysql, location_name, stock_mysql, stock_new)
                     total_actualizados += 1
 
         self.db.commit()
         logging.info("Total productos actualizados: %d", total_actualizados)
+        logging.info("Total productos insertados: %d", total_insertados)
 
     def run(self):
         """Ejecuta la sincronización con mecanismo de bloqueo."""
@@ -131,4 +149,3 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(f"Error inesperado: {e}")
         processor.close_connections()
-
