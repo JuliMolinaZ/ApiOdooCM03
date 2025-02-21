@@ -170,9 +170,26 @@ class DatabaseOperations:
             logging.error("Error al obtener productos existentes: %s", e)
             return {}
         
+    def insertar_produc_ubicaciones(self, ProductoID, ProductoNombreOdoo, ProductoSKUOdoo):
+        """Inserta un nuevo producto"""
+        try:
+            self.execute("INSERT INTO Productos (ProductoID, ProductoNombre, ProductoSKUActual) VALUES (%s, %s, %s)", (ProductoID, ProductoNombreOdoo, ProductoSKUOdoo))
+            self.db_connection.connection.commit()
+        except Exception as e:
+            logging.error("Error al insertar producto: %s", e)
+            return {}
+        
     def actualizar_produc_nombre(self, ProductoNombreOdoo, ProductoID):
         try:
             self.execute("UPDATE Productos SET ProductoNombre = %s WHERE ProductoID = %s", (ProductoNombreOdoo, ProductoID))
+            self.db_connection.connection.commit()
+        except Exception as e:
+            logging.error("Error al obtener productos existentes: %s", e)
+            return {}
+        
+    def actualizar_produc_sku(self, ProductoSKUOdoo, ProductoID):
+        try:
+            self.execute("UPDATE Productos SET ProductoSKUActual = %s WHERE ProductoID = %s", (ProductoSKUOdoo, ProductoID))
             self.db_connection.connection.commit()
         except Exception as e:
             logging.error("Error al obtener productos existentes: %s", e)
