@@ -203,6 +203,11 @@ class DatabaseOperations:
             logging.error("Error al obtener productos existentes: %s", e)
             return {}
         
+    def registro_logs (self, ProductoID, ProductoSKUOdoo, accion, campo, valor_anterior, valor_nuevo, ubicacion=None):
+        sql_query = self.execute("INSERT INTO LogsProductos (ProductoID, ProductoSKU, Accion, Campo, ValorAnterior, ValorNuevo, Ubicacion) VALUES (%s, %s, %s, %s, %s, %s, %s)", (ProductoID, ProductoSKUOdoo, accion, campo, valor_anterior, valor_nuevo, ubicacion))
+        logging.debug(f"Ejecutando SQL: {sql_query}")
+        self.db_connection.connection.commit()
+        
 # Para tarimas_processor.py  
     def select_albaranes(self):
         try:

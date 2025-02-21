@@ -90,6 +90,7 @@ class StockQroCM03(BaseProcessor):
             if ProductoID not in existing_products:
                 if ProductoID == sku_max_id.get(ProductoSKUOdoo):
                     self.db_operations.insertar_produc_ubicaciones(ProductoID, ProductoNombreOdoo, ProductoSKUOdoo)
+                    self.db_operations.registro_logs(ProductoID, ProductoSKUOdoo, "INSERT", "Producto", None, ProductoSKUOdoo, None)
                     logging.warning("--- ProductoID %d INSERTADO CON SKU %s", ProductoID, ProductoSKUOdoo)
                     total_insertados += 1
                 continue
@@ -101,11 +102,13 @@ class StockQroCM03(BaseProcessor):
 
             if ProductoNombreOdoo and ProductoNombreOdoo != nombre_mysql:
                 self.db_operations.actualizar_produc_nombre(ProductoNombreOdoo, ProductoID)
-                logging.info("Nombre actualizado para ProductoID %d (SKU %s): '%s' -> '%s'", ProductoID, sku_mysql, nombre_mysql, ProductoNombreOdoo)
+                self.db_operations.registro_logs(ProductoID, ProductoSKUOdoo, "UPDATE", "Nombre", nombre_mysql, ProductoNombreOdoo, None)
+                logging.info("Nombre actualizado para ProductoID %d (SKU %s): '%s' -> '%s'", ProductoID, ProductoSKUOdoo, nombre_mysql, ProductoNombreOdoo)
                 total_actualizados += 1
             if ProductoSKUOdoo and ProductoSKUOdoo != sku_mysql:
                 self.db_operations.actualizar_produc_sku(ProductoSKUOdoo, ProductoID)
-                logging.info("SKU actualizado para ProductoID %d: '%s' -> '%s'", ProductoID, nombre_mysql, ProductoSKUOdoo)
+                self.db_operations.registro_logs(ProductoID, ProductoSKUOdoo, "UPDATE", "SKU", sku_mysql, ProductoSKUOdoo, None)
+                logging.info("SKU actualizado para ProductoID %d: '%s' -> '%s'", ProductoID, sku_mysql, ProductoSKUOdoo)
                 total_actualizados += 1
 
             for location_name, stock_dict in product_quantities.items():
@@ -115,6 +118,7 @@ class StockQroCM03(BaseProcessor):
                 stock_new = Decimal(stock_new).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if stock_new is not None else Decimal(0)
                 if stock_mysql != stock_new:
                     self.db_operations.actualizar_produc_stock(location_name, stock_new, ProductoID)
+                    self.db_operations.registro_logs(ProductoID, ProductoSKUOdoo, "UPDATE", "Stock", stock_mysql, stock_new, location_name)
                     logging.info("Stock actualizado para ProductoID %d (SKU %s) en %s: %s -> %s", ProductoID, sku_mysql, location_name, stock_mysql, stock_new)
                     total_actualizados += 1
 
