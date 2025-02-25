@@ -12,7 +12,7 @@ from api.odoo_operations import OdooOperations
 from db.operations import DatabaseOperations
 
 # SKU a probar
-sku_a_probar = "CEIDT20060CM2CNA"
+sku_a_probar = ['1874-00']
 
 # Diccionario de ubicaciones
 UBICACIONES = {
@@ -64,29 +64,30 @@ class StockCedisProcessor(BaseProcessor):
         
     def run(self):
         try:
-            producto = self.obtener_producto_por_sku(sku_a_probar)
-            product_id = producto.get('id')
+            for sku in sku_a_probar:
+                producto = self.obtener_producto_por_sku(sku_a_probar)
+                product_id = producto.get('id')
 
-            # Obtener sububicaciones de QRA
-            location_ids_qra = self.obtener_sububicaciones(UBICACIONES['QRA'])
-            stock_qra_detallado = self.obtener_stock_por_sububicacion(product_id, location_ids_qra)
-            stock_qra = stock_qra_detallado.get(UBICACIONES['QRA'], 0)
+                # Obtener sububicaciones de QRA
+                location_ids_qra = self.obtener_sububicaciones(UBICACIONES['QRA'])
+                stock_qra_detallado = self.obtener_stock_por_sububicacion(product_id, location_ids_qra)
+                stock_qra = stock_qra_detallado.get(UBICACIONES['QRA'], 0)
 
-            # Obtener sububicaciones de CDMX
-            stock_cdmx_location_ids = self.obtener_sububicaciones(UBICACIONES['CDMX'])
-            stock_cdmx_detallado = self.obtener_stock_por_sububicacion(product_id, stock_cdmx_location_ids)
-            stock_cdmx = sum(stock_cdmx_detallado.values())
+                # Obtener sububicaciones de CDMX
+                stock_cdmx_location_ids = self.obtener_sububicaciones(UBICACIONES['CDMX'])
+                stock_cdmx_detallado = self.obtener_stock_por_sububicacion(product_id, stock_cdmx_location_ids)
+                stock_cdmx = sum(stock_cdmx_detallado.values())
 
-            # Stock total
-            stock_total = stock_qra + stock_cdmx
-            self.registrar_stock_en_bd(
-                producto_id=product_id,
-                producto_nombre=producto['name'],
-                sku_actual=sku_a_probar,
-                stock_total=stock_total,
-                stock_qra=stock_qra,
-                stock_cdmx=stock_cdmx
-            )
+                # Stock total
+                stock_total = stock_qra + stock_cdmx
+                self.registrar_stock_en_bd(
+                    producto_id=product_id,
+                    producto_nombre=producto['name'],
+                    sku_actual=sku,
+                    stock_total=stock_total,
+                    stock_qra=stock_qra,
+                    stock_cdmx=stock_cdmx
+                )
             logging.info("Proceso completado con éxito.")
         except Exception as e:
             logging.error(f"Error durante el procesamiento: {e}")

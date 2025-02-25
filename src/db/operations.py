@@ -77,6 +77,7 @@ class DatabaseOperations:
         """Marca el albarán como procesado en la base de datos."""
         try:
             self.execute("UPDATE Albaran SET Procesado = 1 WHERE AlbaranID = %s", (albaran_id,))
+            self.db_connection.connection.commit()
             logging.info(f"Albarán {albaran_id} marcado como procesado.")
         except Exception as e:
             logging.error(f"Error al marcar el albarán {albaran_id} como procesado: {e}")
@@ -129,7 +130,6 @@ class DatabaseOperations:
         except Exception as e:
             logging.error(f"Error al verificar existencia de producto: {e}")
             return False
-
   
     def actualizar_producto(self, producto_id, producto_nombre, stock_total, stock_qra, stock_cdmx, sku_actual):
         """Actualiza la información del producto en la base de datos."""
@@ -170,9 +170,26 @@ class DatabaseOperations:
             logging.error("Error al obtener productos existentes: %s", e)
             return {}
         
+    def insertar_produc_ubicaciones(self, ProductoID, ProductoNombreOdoo, ProductoSKUOdoo):
+        """Inserta un nuevo producto"""
+        try:
+            self.execute("INSERT INTO Productos (ProductoID, ProductoNombre, ProductoSKUActual) VALUES (%s, %s, %s)", (ProductoID, ProductoNombreOdoo, ProductoSKUOdoo))
+            self.db_connection.connection.commit()
+        except Exception as e:
+            logging.error("Error al insertar producto: %s", e)
+            return {}
+        
     def actualizar_produc_nombre(self, ProductoNombreOdoo, ProductoID):
         try:
             self.execute("UPDATE Productos SET ProductoNombre = %s WHERE ProductoID = %s", (ProductoNombreOdoo, ProductoID))
+            self.db_connection.connection.commit()
+        except Exception as e:
+            logging.error("Error al obtener productos existentes: %s", e)
+            return {}
+        
+    def actualizar_produc_sku(self, ProductoSKUOdoo, ProductoID):
+        try:
+            self.execute("UPDATE Productos SET ProductoSKUActual = %s WHERE ProductoID = %s", (ProductoSKUOdoo, ProductoID))
             self.db_connection.connection.commit()
         except Exception as e:
             logging.error("Error al obtener productos existentes: %s", e)
@@ -185,6 +202,11 @@ class DatabaseOperations:
         except Exception as e:
             logging.error("Error al obtener productos existentes: %s", e)
             return {}
+        
+    def registro_logs (self, ProductoID, ProductoSKUOdoo, accion, campo, valor_anterior, valor_nuevo, ubicacion=None):
+        sql_query = self.execute("INSERT INTO LogsProductos (ProductoID, ProductoSKU, Accion, Campo, ValorAnterior, ValorNuevo, Ubicacion) VALUES (%s, %s, %s, %s, %s, %s, %s)", (ProductoID, ProductoSKUOdoo, accion, campo, valor_anterior, valor_nuevo, ubicacion))
+        logging.debug(f"Ejecutando SQL: {sql_query}")
+        self.db_connection.connection.commit()
         
 # Para tarimas_processor.py  
     def select_albaranes(self):

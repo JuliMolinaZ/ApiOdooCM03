@@ -52,7 +52,7 @@ class OdooOperations:
             return None
     
     def buscar_albaranes_pendientes(self):
-        domain = [("state", "=", "done"), ('name', 'like', 'WH/OUT/%')]  # Filtra albaranes listos para procesar
+        domain = [("state", "=", "assigned"), ('name', 'like', 'WH/OUT/%')]  # Filtra albaranes listos para procesar
         albaranes = self.odoo.search("stock.picking", domain)
         return albaranes if albaranes else []
     
@@ -189,10 +189,12 @@ class OdooOperations:
             product_data = self.odoo.execute_kw(
                 'product.product', 'search_read',
                 [[('id', 'in', product_ids)]],
-                {'fields': ['id', 'name']}
+                {'fields': ['id', 'name', 'default_code']}
             )
-            logging.debug("Nombres obtenidos: %s", product_data)
-            return {prod['id']: prod['name'] for prod in product_data}
+            logging.debug("Los productos: %s", product_data)
+            product_names = {prod['id']: prod['name'] for prod in product_data}
+            product_skus = {prod['id']: prod['default_code'] for prod in product_data if prod.get('default_code')}
+            return product_names, product_skus 
         except Exception as e:
             logging.error("Error al obtener nombres de productos: %s", e)
             return {}
