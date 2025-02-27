@@ -1,3 +1,5 @@
+#.gitignore
+
 # Archivos y carpetas específicas del entorno virtual
 .venv/
 env/

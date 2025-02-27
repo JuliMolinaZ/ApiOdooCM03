@@ -19,14 +19,14 @@
 
 ## Descripción General
 
-**ApiOdooCM03** es una aplicación desarrollada en Python para interactuar con el sistema Odoo y gestionar datos dentro de una base de datos MySQL. Este proyecto sincroniza productos entre Odoo y la base de datos MySQL, validando la existencia de productos, actualizando el stock en múltiples ubicaciones (QRO y CDMX), e insertando nuevos productos cuando es necesario, La aplicación también tiene pruebas unitarias para garantizar su funcionamiento correcto.
+**ApiOdooCM03** es una aplicación desarrollada en Python para interactuar con el sistema Odoo y gestionar datos dentro de una base de datos MySQL. Este proyecto sincroniza productos entre Odoo y la base de datos MySQL, validando la existencia de productos, actualizando el stock en múltiples ubicaciones (QRO y CDMX), e insertando nuevos productos cuando es necesario, la aplicación también tiene pruebas unitarias para garantizar su funcionamiento correcto.
 
 ## Características
 
-- **Integración con Odoo:** Recupera productos, stock, y sububicaciones desde Odoo.
+- **Integración con Odoo:** Recupera albaranes, productos, stocks, y sububicaciones desde Odoo.
 - **Sincronización de Base de Datos:** Consulta, actualiza y/o inserta datos en MySQL.
 - **Gestión de Stock:** Maneja el stock en distintas ubicaciones como QRO y CDMX.
-- **Gestión de Alabaranes:** Actualiza albaranes de acuerdo a folio.
+- **Gestión de Albaranes:** Actualiza albaranes de acuerdo a folio.
 - **Registro de Logs:** Monitorea la ejecución de procesos y registra posibles errores para solución de problemas.
 
 ## Estructura del proyecto
@@ -49,8 +49,12 @@ ApiOdooCM03/
 │   │   └── operations.py 
 │   ├── processors/ 
 │   │   ├── __init__.py 
+│   │   ├── albaranes_processor.py 
+│   │   ├── base_processor.py 
+│   │   ├── internal_transfer_processor.py 
 │   │   ├── stock_cedis_processor.py 
-│   │   └── stock_qra_processor.py 
+│   │   ├── stock_qra_processor.py 
+│   │   └── tarimas_processor.py 
 │   └── utils/ 
 │       ├── __init__.py 
 │       └── logger.py 
@@ -109,7 +113,7 @@ Dentro de este archivo, puedes agregar configuraciones como la URL de conexión 
 ## Ejecución de Pruebas
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+pytest -v tests
 ```
 
 ## Ejecución de la Aplicación
@@ -151,4 +155,3 @@ Las contribuciones son bienvenidas. Por favor, abre un issue o envía un pull re
 ## Licencia
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles.
-=======
