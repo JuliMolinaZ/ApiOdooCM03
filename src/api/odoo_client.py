@@ -1,9 +1,9 @@
 # src/api/odoo_client.py
 # Conexion a Odoo, consultas o acciones relacionadas.
 
+import logging
 import xmlrpc.client
 from config.settings import Config
-import logging
 
 class OdooClient:
     def __init__(self):
@@ -43,4 +43,3 @@ class OdooClient:
         """ Lee registros de un modelo en Odoo. """
         return self.models.execute_kw(self.db, self.uid, self.password,
                                     model, 'read', [ids], {'fields': fields})
-

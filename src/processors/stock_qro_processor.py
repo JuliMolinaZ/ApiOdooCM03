@@ -1,12 +1,12 @@
 # src/processors/stock_qra_processor.py
-# Actualiza todos los productos existentes en la BD, considerando el stock de QRA y CDMX usando un diccionario de ubicaciones
+# Actualiza e inserta todos los productos existentes en Stock QRO y CDMX en la BD, accede a los stocks usando un diccionario de ubicaciones
 
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src')))
 
 import time
-import msvcrt
+import fcntl
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 from utils.logger import configurar_logger
@@ -130,13 +130,13 @@ class StockQroCM03(BaseProcessor):
         """Ejecuta la sincronización con mecanismo de bloqueo."""
         lock_file = open(LOCK_FILE_PATH, 'w')
         try:
-            msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
             logging.info("Lock adquirido. Iniciando sincronización.")
             self.actualizar_productos()
         except IOError:
             logging.warning("Otra instancia del script está en ejecución. Saliendo.")
         finally:
-            msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
             lock_file.close()
             logging.info("Lock liberado. Sincronización finalizada.")
 

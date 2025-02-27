@@ -1,6 +1,6 @@
 # src/processors/recibos_processor.py
 # Script dedicado a insertar o actualizar recibos_especificos con folio por defecto (WH/IN/) desde ordenes de entrega en Odoo
-# Observaciones hay recibos que no estan pero tienen priority y done pero no inserta, parece que no los tiene en cuenta.
+# Observaciones hay recibos que no estan pero tienen priority y done pero no inserta, no coincide con fecha esperada (hoy).
 
 import sys
 import os
