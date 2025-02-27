@@ -12,7 +12,7 @@ from api.odoo_operations import OdooOperations
 from db.operations import DatabaseOperations
 
 # SKU a probar
-sku_a_probar = ['1874-00']
+sku_a_probar = ['']
 
 # Diccionario de ubicaciones
 UBICACIONES = {

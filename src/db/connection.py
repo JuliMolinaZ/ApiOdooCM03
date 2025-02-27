@@ -1,10 +1,10 @@
 # src/db/connection.py
 # Establece la conexion con la bae de datos.
 
+import logging
 import mysql.connector
 from mysql.connector import Error
 from config.settings import Config
-import logging
 
 class DatabaseConnection:
     def __init__(self):

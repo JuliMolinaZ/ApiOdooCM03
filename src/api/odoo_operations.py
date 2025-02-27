@@ -71,7 +71,7 @@ class OdooOperations:
         
 # Para internal_transfer_processor.py
     def search_albaranes_cdex(self, priority=None, state=None, folio_like=None):
-        """Busca albaranes con prioridad 1, estado 'done' y folio que comienza con 'WH/TCDMX y WH/RTCDMX'."""
+        """Busca albaranes con prioridad, estado y folio."""
         try:
             # Definir el dominio para la búsqueda
             domain = []
@@ -82,7 +82,7 @@ class OdooOperations:
                 domain.append(['state', '=', state])
             if folio_like:
                 if isinstance(folio_like, list):  # Si es una lista, agregamos múltiples condiciones
-                    domain.extend(['|'] * (len(folio_like) - 1))  # Agrega operadores OR
+                    domain.extend(['|'] * (len(folio_like) - 1))  # Agrega operadores OR si hay mas de un folio
                     for folio in folio_like:
                         domain.append(['name', 'like', folio])
                 else:

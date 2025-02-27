@@ -92,13 +92,18 @@ class InternalTransferProcessor(BaseProcessor):
         # Ciclo principal para procesar albaranes según las condiciones especificadas
         while True:
             try:
-                # Se busca albaranes con priority y con done
-                logging.info("Buscando albaranes con prioridad 1, estado 'done' y folio que comienza con 'wh/tcdmx'.")
-                albaranes = self.odoo_operations.search_albaranes_cdex(priority=1, folio_like=['WH/TCDMX%'])
+                # Se busca albaranes con priority y con el folio de transferencia
+                logging.info("Buscando albaranes con prioridad 1 y folio 'wh/tcdmx'.")
+                albaranes_tcdmx = self.odoo_operations.search_albaranes_cdex(priority=1, folio_like=['WH/TCDMX%'])
+                logging.info("Buscando albaranes con prioridad 1, status = listo y folio 'wh/int'.")
+                albaranes_int = self.odoo_operations.search_albaranes_cdex(priority=1, folio_like=['WH/INT%'], state='assigned')
+
+                albaranes = albaranes_tcdmx + albaranes_int
 
                 # Procesar los albaranes desde el más reciente hacia atrás
                 for albaran in albaranes[::-1]:
                     self.procesar_albaran(albaran)
+                
 
             except Exception as e:
                 logging.error(f"Error en la ejecución principal: {e}")

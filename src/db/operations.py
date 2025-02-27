@@ -1,10 +1,10 @@
 # src/db/operations.py
 # Operaciones (consultas, actualizaciones, etc) sobre la base de datos
 
-from db.connection import DatabaseConnection
-from mysql.connector import Error
 import logging
 from datetime import datetime
+from db.connection import DatabaseConnection
+from mysql.connector import Error
 
 class DatabaseOperations:
     def __init__(self):
@@ -180,6 +180,7 @@ class DatabaseOperations:
             return {}
         
     def actualizar_produc_nombre(self, ProductoNombreOdoo, ProductoID):
+        """Actualiza el ProductoNombre"""
         try:
             self.execute("UPDATE Productos SET ProductoNombre = %s WHERE ProductoID = %s", (ProductoNombreOdoo, ProductoID))
             self.db_connection.connection.commit()
@@ -188,6 +189,7 @@ class DatabaseOperations:
             return {}
         
     def actualizar_produc_sku(self, ProductoSKUOdoo, ProductoID):
+        """Actualiza el ProductoSKUActual"""
         try:
             self.execute("UPDATE Productos SET ProductoSKUActual = %s WHERE ProductoID = %s", (ProductoSKUOdoo, ProductoID))
             self.db_connection.connection.commit()
@@ -204,6 +206,7 @@ class DatabaseOperations:
             return {}
         
     def registro_logs (self, ProductoID, ProductoSKUOdoo, accion, campo, valor_anterior, valor_nuevo, ubicacion=None):
+        """Registra en LogsProductos los cambios realizados en stock_qro_processor"""
         sql_query = self.execute("INSERT INTO LogsProductos (ProductoID, ProductoSKU, Accion, Campo, ValorAnterior, ValorNuevo, Ubicacion) VALUES (%s, %s, %s, %s, %s, %s, %s)", (ProductoID, ProductoSKUOdoo, accion, campo, valor_anterior, valor_nuevo, ubicacion))
         logging.debug(f"Ejecutando SQL: {sql_query}")
         self.db_connection.connection.commit()
