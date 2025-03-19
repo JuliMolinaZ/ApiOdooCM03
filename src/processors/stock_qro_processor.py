@@ -141,7 +141,7 @@ class StockQroCM03(BaseProcessor):
             logging.info("Lock liberado. Sincronización finalizada.")
 
 if __name__ == "__main__":
-    logger = configurar_logger(level=logging.DEBUG, log_to_file=True, log_file="sync_qro_log.log")
+    logger = configurar_logger(level=logging.DEBUG, log_to_file=False)
     processor = StockQroCM03()
     try:
         while True:
